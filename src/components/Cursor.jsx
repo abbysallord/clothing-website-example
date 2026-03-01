@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react';
 
-const TICKS = 24;
-
 export default function Cursor() {
-  const svgWrapRef = useRef(null);
+  const ringRef = useRef(null);
   const dotRef = useRef(null);
   const labelRef = useRef(null);
-  const ringRef = useRef(null);
-  const crosshairRef = useRef(null);
+  const innerRingRef = useRef(null);
 
   const posRef = useRef({ x: -200, y: -200 });
   const smoothRef = useRef({ x: -200, y: -200 });
@@ -21,11 +18,10 @@ export default function Cursor() {
   const lerp = (a, b, t) => a + (b - a) * t;
 
   useEffect(() => {
-    const svgWrap = svgWrapRef.current;
-    const dot = dotRef.current;
     const ring = ringRef.current;
-    const crosshair = crosshairRef.current;
+    const dot = dotRef.current;
     const labelEl = labelRef.current;
+    const innerRing = innerRingRef.current;
 
     const onMove = (e) => {
       posRef.current = { x: e.clientX, y: e.clientY };
@@ -37,7 +33,6 @@ export default function Cursor() {
     const onLeave = () => { visibleRef.current = false; };
     const onEnter = () => { visibleRef.current = true; };
 
-    // Event delegation — no MutationObserver needed
     const onMouseOver = (e) => {
       const el = e.target.closest('a, button, [data-cursor], input');
       if (el) {
@@ -71,52 +66,58 @@ export default function Cursor() {
       const isHover = stateRef.current === 'hover';
       const isClick = stateRef.current === 'click';
 
-      // Ring follows with lag
-      smoothRef.current.x = lerp(smoothRef.current.x, posRef.current.x, isHover ? 0.055 : 0.1);
-      smoothRef.current.y = lerp(smoothRef.current.y, posRef.current.y, isHover ? 0.055 : 0.1);
+      // Ring — graceful lag
+      smoothRef.current.x = lerp(smoothRef.current.x, posRef.current.x, isHover ? 0.06 : 0.1);
+      smoothRef.current.y = lerp(smoothRef.current.y, posRef.current.y, isHover ? 0.06 : 0.1);
 
-      // Dot follows snappier
-      dotSmoothRef.current.x = lerp(dotSmoothRef.current.x, posRef.current.x, 0.35);
-      dotSmoothRef.current.y = lerp(dotSmoothRef.current.y, posRef.current.y, 0.35);
+      // Dot — snappy
+      dotSmoothRef.current.x = lerp(dotSmoothRef.current.x, posRef.current.x, 0.4);
+      dotSmoothRef.current.y = lerp(dotSmoothRef.current.y, posRef.current.y, 0.4);
 
       const { x, y } = smoothRef.current;
       const { x: dx, y: dy } = dotSmoothRef.current;
 
-      // Position ring
-      if (svgWrap) {
-        svgWrap.style.left = x + 'px';
-        svgWrap.style.top = y + 'px';
-        const scale = isClick ? 0.65 : isHover ? 1.6 : 1;
-        svgWrap.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        svgWrap.style.opacity = visibleRef.current ? '1' : '0';
+      // Outer ring
+      if (ring) {
+        ring.style.left = x + 'px';
+        ring.style.top = y + 'px';
+        const scale = isClick ? 0.7 : isHover ? 1.5 : 1;
+        ring.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        ring.style.opacity = visibleRef.current ? '1' : '0';
+        ring.style.borderColor = isHover
+          ? 'rgba(201, 169, 110, 0.6)'
+          : 'rgba(201, 169, 110, 0.25)';
+        ring.style.boxShadow = isHover
+          ? '0 0 20px rgba(201,169,110,0.15), inset 0 0 20px rgba(201,169,110,0.05)'
+          : 'none';
       }
 
-      // Position dot
+      // Center dot — diamond shape
       if (dot) {
         dot.style.left = dx + 'px';
         dot.style.top = dy + 'px';
-        const dScale = isClick ? 2.8 : isHover ? 2.2 : 1;
-        dot.style.transform = `translate(-50%, -50%) scale(${dScale})`;
+        const dScale = isClick ? 0.5 : isHover ? 1.8 : 1;
+        dot.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${dScale})`;
         dot.style.background = isHover ? '#c9a96e' : '#f0ebe0';
-        dot.style.boxShadow = isHover ? '0 0 12px rgba(201,169,110,0.9), 0 0 30px rgba(201,169,110,0.4)' : 'none';
+        dot.style.boxShadow = isHover
+          ? '0 0 8px rgba(201,169,110,0.8), 0 0 20px rgba(201,169,110,0.3)'
+          : '0 0 4px rgba(240,235,224,0.3)';
       }
 
-      // Rotate tick ring
-      rotRef.current += isHover ? 0.5 : 0.12;
-      if (ring) ring.style.transform = `rotate(${rotRef.current}deg)`;
-
-      // Crosshair scale
-      if (crosshair) {
-        const cScale = isClick ? 0.2 : isHover ? 2 : 1;
-        const cOpacity = isClick ? 0.1 : isHover ? 0.12 : 0.55;
-        crosshair.style.transform = `scale(${cScale})`;
-        crosshair.style.opacity = cOpacity;
+      // Inner decorative ring — slow elegant rotation
+      rotRef.current += isHover ? 0.3 : 0.08;
+      if (innerRing) {
+        innerRing.style.left = x + 'px';
+        innerRing.style.top = y + 'px';
+        const irScale = isClick ? 0.5 : isHover ? 1.6 : 1;
+        innerRing.style.transform = `translate(-50%, -50%) rotate(${rotRef.current}deg) scale(${irScale})`;
+        innerRing.style.opacity = visibleRef.current ? (isHover ? '1' : '0.6') : '0';
       }
 
       // Label
       if (labelEl) {
-        labelEl.style.left = (x + 22) + 'px';
-        labelEl.style.top = (y - 10) + 'px';
+        labelEl.style.left = (x + 28) + 'px';
+        labelEl.style.top = (y - 8) + 'px';
         labelEl.style.opacity = (isHover && labelTextRef.current) ? '1' : '0';
       }
 
@@ -137,83 +138,83 @@ export default function Cursor() {
     };
   }, []);
 
-  const ticks = Array.from({ length: TICKS }, (_, i) => {
-    const angle = (i / TICKS) * 360;
-    const rad = (angle * Math.PI) / 180;
-    const isMajor = i % 6 === 0;
-    const r1 = 28, r2 = isMajor ? 22 : 25;
-    return {
-      x1: 32 + Math.cos(rad) * r1, y1: 32 + Math.sin(rad) * r1,
-      x2: 32 + Math.cos(rad) * r2, y2: 32 + Math.sin(rad) * r2,
-      isMajor,
-    };
-  });
-
   return (
     <>
       <style>{`* { cursor: none !important; }`}</style>
 
-      {/* Central dot — snappy */}
+      {/* Center diamond dot */}
       <div ref={dotRef} style={{
-        position: 'fixed', width: '5px', height: '5px', borderRadius: '50%',
-        background: '#f0ebe0', pointerEvents: 'none', zIndex: 999999,
-        transition: 'transform 0.15s cubic-bezier(0.16,1,0.3,1), background 0.25s, box-shadow 0.25s',
-        willChange: 'transform, left, top', left: '-200px', top: '-200px',
+        position: 'fixed',
+        width: '5px',
+        height: '5px',
+        background: '#f0ebe0',
+        pointerEvents: 'none',
+        zIndex: 999999,
+        transition: 'transform 0.18s cubic-bezier(0.16,1,0.3,1), background 0.3s, box-shadow 0.3s',
+        willChange: 'transform, left, top',
+        left: '-200px',
+        top: '-200px',
       }} />
 
-      {/* SVG crosshair ring — lagged */}
-      <div ref={svgWrapRef} style={{
-        position: 'fixed', pointerEvents: 'none', zIndex: 99998,
-        transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.3s',
-        opacity: 0, willChange: 'transform, left, top',
-        left: '-200px', top: '-200px',
+      {/* Outer ring — clean thin circle */}
+      <div ref={ringRef} style={{
+        position: 'fixed',
+        width: '44px',
+        height: '44px',
+        borderRadius: '50%',
+        border: '1px solid rgba(201, 169, 110, 0.25)',
+        pointerEvents: 'none',
+        zIndex: 99998,
+        transition: 'transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, border-color 0.4s, box-shadow 0.4s',
+        opacity: 0,
+        willChange: 'transform, left, top',
+        left: '-200px',
+        top: '-200px',
+      }} />
+
+      {/* Inner decorative ring — 4 cardinal gems */}
+      <div ref={innerRingRef} style={{
+        position: 'fixed',
+        width: '44px',
+        height: '44px',
+        pointerEvents: 'none',
+        zIndex: 99997,
+        transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.3s',
+        opacity: 0,
+        willChange: 'transform, left, top',
+        left: '-200px',
+        top: '-200px',
       }}>
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          {/* Static outer ring */}
-          <circle cx="32" cy="32" r="29" stroke="rgba(201,169,110,0.15)" strokeWidth="0.5" />
-
-          {/* Rotating tick ring */}
-          <g ref={ringRef} style={{ transformOrigin: '32px 32px' }}>
-            {ticks.map((t, i) => (
-              <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-                stroke={t.isMajor ? 'rgba(201,169,110,0.85)' : 'rgba(201,169,110,0.28)'}
-                strokeWidth={t.isMajor ? 1 : 0.5} />
-            ))}
-          </g>
-
-          {/* Crosshair lines */}
-          <g ref={crosshairRef} style={{
-            transformOrigin: '32px 32px',
-            transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.3s',
-          }}>
-            <line x1="32" y1="3" x2="32" y2="21" stroke="rgba(240,235,224,0.65)" strokeWidth="0.75" />
-            <line x1="32" y1="43" x2="32" y2="61" stroke="rgba(240,235,224,0.65)" strokeWidth="0.75" />
-            <line x1="3"  y1="32" x2="21" y2="32" stroke="rgba(240,235,224,0.65)" strokeWidth="0.75" />
-            <line x1="43" y1="32" x2="61" y2="32" stroke="rgba(240,235,224,0.65)" strokeWidth="0.75" />
-          </g>
-
-          {/* Corner brackets */}
-          <g opacity="0.45">
-            <path d="M13 20 L13 13 L20 13" stroke="rgba(201,169,110,0.7)" strokeWidth="0.75" fill="none" />
-            <path d="M44 13 L51 13 L51 20" stroke="rgba(201,169,110,0.7)" strokeWidth="0.75" fill="none" />
-            <path d="M13 44 L13 51 L20 51" stroke="rgba(201,169,110,0.7)" strokeWidth="0.75" fill="none" />
-            <path d="M51 44 L51 51 L44 51" stroke="rgba(201,169,110,0.7)" strokeWidth="0.75" fill="none" />
-          </g>
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Four diamond accents at cardinal points */}
+          <rect x="21" y="2" width="2.5" height="2.5" transform="rotate(45 22 3.25)" fill="rgba(201,169,110,0.7)" />
+          <rect x="21" y="38.5" width="2.5" height="2.5" transform="rotate(45 22 39.75)" fill="rgba(201,169,110,0.7)" />
+          <rect x="2.25" y="20.75" width="2.5" height="2.5" transform="rotate(45 3.5 22)" fill="rgba(201,169,110,0.7)" />
+          <rect x="39.75" y="20.75" width="2.5" height="2.5" transform="rotate(45 41 22)" fill="rgba(201,169,110,0.7)" />
+          {/* Subtle arc accents between diamonds */}
+          <path d="M 8 8 A 20 20 0 0 1 36 8" stroke="rgba(201,169,110,0.12)" strokeWidth="0.5" fill="none" />
+          <path d="M 36 36 A 20 20 0 0 1 8 36" stroke="rgba(201,169,110,0.12)" strokeWidth="0.5" fill="none" />
         </svg>
       </div>
 
       {/* Contextual label */}
       <div ref={labelRef} style={{
-        position: 'fixed', pointerEvents: 'none', zIndex: 999997,
-        fontFamily: "'Space Mono', monospace", fontSize: '0.48rem',
-        letterSpacing: '0.22em', textTransform: 'uppercase',
-        color: '#c9a96e', opacity: 0, whiteSpace: 'nowrap',
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: 999997,
+        fontFamily: "'Cinzel', Georgia, serif",
+        fontSize: '0.5rem',
+        fontWeight: '700',
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color: '#c9a96e',
+        opacity: 0,
+        whiteSpace: 'nowrap',
         transform: 'translateY(-50%)',
-        transition: 'opacity 0.2s ease',
-        left: '-200px', top: '-200px',
-      }}>
-        {/* Text set via DOM in animation loop */}
-      </div>
+        transition: 'opacity 0.25s ease',
+        left: '-200px',
+        top: '-200px',
+      }} />
     </>
   );
 }
