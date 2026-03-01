@@ -5,11 +5,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const products = [
-  { name: 'The Void Overcoat', sub: 'Midnight Weight Wool', price: '₹24,000', size: 'large' },
-  { name: 'Eclipse Hoodie', sub: 'Loopback Cotton', price: '₹8,500' },
-  { name: 'Ash Cargo', sub: 'Washed Twill', price: '₹9,200' },
-  { name: 'Silent Turtleneck', sub: 'Merino Blend', price: '₹6,800' },
-  { name: 'Raven Blazer', sub: 'Unstructured Canvas', price: '₹18,000' },
+  { name: 'The Void Overcoat', sub: 'Midnight Weight Wool', price: '₹24,000', size: 'large', image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&w=800&q=80' },
+  { name: 'Eclipse Hoodie', sub: 'Loopback Cotton', price: '₹8,500', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80' },
+  { name: 'Ash Cargo', sub: 'Washed Twill', price: '₹9,200', image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=800&q=80' },
+  { name: 'Silent Turtleneck', sub: 'Merino Blend', price: '₹6,800', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80' },
+  { name: 'Raven Blazer', sub: 'Unstructured Canvas', price: '₹18,000', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80' },
 ];
 
 function ProductCard({ product, index }) {
@@ -35,10 +35,7 @@ function ProductCard({ product, index }) {
     <div ref={cardRef} className="product-card">
       <div className="product-card__image">
         <div className="product-card__img-placeholder">
-          {/* Drop in: <img src={`/products/product-${index+1}.jpg`} alt={product.name} /> */}
-          <span style={{ position: 'relative', zIndex: 1 }}>
-            PRODUCT<br />IMAGE {index + 1}
-          </span>
+          <img src={product.image} alt={product.name} loading="lazy" />
         </div>
         <div className="product-card__overlay">
           <div className="product-card__quick-add">Quick Add +</div>

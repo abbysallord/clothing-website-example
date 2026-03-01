@@ -89,8 +89,7 @@ export default function Philosophy() {
         <div className="philosophy__visual">
           <div className="philosophy__img-frame">
             <div ref={imgRef} className="philosophy__img-inner">
-              {/* Replace with: <img src="/philosophy.jpg" alt="VØID Craft" /> */}
-              CRAFT<br />IMAGE<br />HERE
+              <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80" alt="VØID Craft — hands tailoring fabric" loading="lazy" />
             </div>
           </div>
           <div className="philosophy__frame-accent" />

@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
   const sectionRef = useRef(null);
@@ -56,21 +59,35 @@ export default function Hero() {
       '-=2.0'
     );
 
-    // Parallax on scroll
-    const onScroll = () => {
-      if (!parallaxRef.current) return;
-      const scrollY = window.scrollY;
-      parallaxRef.current.style.transform = `translateY(${scrollY * 0.3}px)`;
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
+    // Parallax using GSAP ScrollTrigger (GPU-accelerated)
+    const parallaxTrigger = gsap.to(parallaxRef.current, {
+      yPercent: 30,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true,
+      }
+    });
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
       splitTitle.revert();
       tl.kill();
+      parallaxTrigger.scrollTrigger?.kill();
+      parallaxTrigger.kill();
     };
   }, []);
+
+  const scrollTo = (e, target) => {
+    e.preventDefault();
+    const lenis = window.__lenis;
+    if (lenis) {
+      lenis.scrollTo(target, { duration: 1.8 });
+    } else {
+      document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section ref={sectionRef} className="hero" id="hero">
@@ -78,10 +95,7 @@ export default function Hero() {
 
       <div ref={visualRef} className="hero__visual">
         <div ref={parallaxRef} className="hero__image-placeholder">
-          {/* Replace with: <img src="/your-model-photo.jpg" alt="VØID Collection" /> */}
-          <span style={{ position: 'relative', zIndex: 1 }}>
-            PLACE YOUR<br />HERO IMAGE<br />HERE
-          </span>
+          <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80" alt="VØID Collection" fetchpriority="high" />
         </div>
         <div className="hero__overlay" />
       </div>
@@ -101,11 +115,11 @@ export default function Hero() {
         </p>
 
         <div ref={actionsRef} className="hero__actions">
-          <a href="#collection" className="btn-primary">
+          <a href="#collection" className="btn-primary" onClick={(e) => scrollTo(e, '#collection')}>
             <span>Explore Collection</span>
             <span>→</span>
           </a>
-          <a href="#story" className="btn-ghost">
+          <a href="#story" className="btn-ghost" onClick={(e) => scrollTo(e, '#story')}>
             Our Story <span className="arrow">→</span>
           </a>
         </div>

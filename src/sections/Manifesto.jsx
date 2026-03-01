@@ -33,7 +33,7 @@ export default function Manifesto() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="manifesto" id="story">
+    <section ref={sectionRef} className="manifesto" id="manifesto">
       <div className="manifesto__number">01 — Manifesto</div>
       <p ref={textRef} className="manifesto__text">
         We don't create clothing. <em>We create space.</em>{' '}

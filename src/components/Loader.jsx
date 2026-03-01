@@ -50,7 +50,6 @@ export default function Loader({ onComplete }) {
 
   return (
     <div ref={loaderRef} className="loader">
-      <div className="noise" />
       <div ref={brandRef} className="loader__brand">VØID</div>
       <div ref={lineRef} className="loader__line" />
       <div ref={counterRef} className="loader__counter">0%</div>

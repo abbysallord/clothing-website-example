@@ -28,6 +28,9 @@ export default function App() {
       smooth: true,
     });
 
+    // Expose lenis for smooth anchor scrolling
+    window.__lenis = lenis;
+
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
 
@@ -38,6 +41,7 @@ export default function App() {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      window.__lenis = null;
       lenis.destroy();
       gsap.ticker.remove(lenis.raf);
     };
@@ -53,9 +57,6 @@ export default function App() {
 
   return (
     <>
-      {/* Global noise overlay */}
-      <div className="noise" aria-hidden="true" />
-
       {/* Custom cursor */}
       <Cursor />
 

@@ -107,7 +107,7 @@ export default function Story() {
   }, []);
 
   return (
-    <section ref={containerRef} className="story-section" id="story-panels" style={{ height: '100vh' }}>
+    <section ref={containerRef} className="story-section" id="story" style={{ height: '100vh' }}>
       <div ref={trackRef} className="h-scroll-track">
         {panels.map((panel, i) => (
           <div key={i} className={`story-panel story-panel${panel.accent}`}>

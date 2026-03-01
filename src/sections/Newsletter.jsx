@@ -35,7 +35,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section ref={sectionRef} className="newsletter">
+    <section ref={sectionRef} className="newsletter" id="about">
       <div className="newsletter__label">04 — Join The Silence</div>
       <h2 ref={titleRef} className="newsletter__title">
         Enter The<br /><em>Void</em>

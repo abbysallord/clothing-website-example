@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 const TICKS = 24;
 
@@ -15,9 +15,8 @@ export default function Cursor() {
   const rotRef = useRef(0);
   const rafRef = useRef(null);
   const stateRef = useRef('default');
-
-  const [label, setLabel] = useState('');
-  const [visible, setVisible] = useState(false);
+  const labelTextRef = useRef('');
+  const visibleRef = useRef(false);
 
   const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -30,37 +29,43 @@ export default function Cursor() {
 
     const onMove = (e) => {
       posRef.current = { x: e.clientX, y: e.clientY };
-      if (!visible) setVisible(true);
+      visibleRef.current = true;
     };
 
     const onDown = () => { stateRef.current = 'click'; };
     const onUp = () => { stateRef.current = stateRef.current === 'click' ? 'default' : stateRef.current; };
-    const onLeave = () => setVisible(false);
-    const onEnter = () => setVisible(true);
+    const onLeave = () => { visibleRef.current = false; };
+    const onEnter = () => { visibleRef.current = true; };
 
-    const setupHover = () => {
-      document.querySelectorAll('a, button, [data-cursor], input').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-          stateRef.current = 'hover';
-          const txt = el.dataset.cursor || el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 14) || '';
-          setLabel(txt.toUpperCase());
-        });
-        el.addEventListener('mouseleave', () => {
-          stateRef.current = 'default';
-          setLabel('');
-        });
-      });
+    // Event delegation — no MutationObserver needed
+    const onMouseOver = (e) => {
+      const el = e.target.closest('a, button, [data-cursor], input');
+      if (el) {
+        stateRef.current = 'hover';
+        const txt = el.dataset.cursor || el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 14) || '';
+        labelTextRef.current = txt.toUpperCase();
+        if (labelEl) labelEl.textContent = labelTextRef.current;
+      }
     };
 
-    setupHover();
-    const observer = new MutationObserver(setupHover);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const onMouseOut = (e) => {
+      const el = e.target.closest('a, button, [data-cursor], input');
+      if (el) {
+        const related = e.relatedTarget?.closest?.('a, button, [data-cursor], input');
+        if (related === el) return;
+        stateRef.current = 'default';
+        labelTextRef.current = '';
+        if (labelEl) labelEl.textContent = '';
+      }
+    };
 
-    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mousemove', onMove, { passive: true });
     document.addEventListener('mousedown', onDown);
     document.addEventListener('mouseup', onUp);
     document.addEventListener('mouseleave', onLeave);
     document.addEventListener('mouseenter', onEnter);
+    document.addEventListener('mouseover', onMouseOver);
+    document.addEventListener('mouseout', onMouseOut);
 
     const animate = () => {
       const isHover = stateRef.current === 'hover';
@@ -83,6 +88,7 @@ export default function Cursor() {
         svgWrap.style.top = y + 'px';
         const scale = isClick ? 0.65 : isHover ? 1.6 : 1;
         svgWrap.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        svgWrap.style.opacity = visibleRef.current ? '1' : '0';
       }
 
       // Position dot
@@ -111,7 +117,7 @@ export default function Cursor() {
       if (labelEl) {
         labelEl.style.left = (x + 22) + 'px';
         labelEl.style.top = (y - 10) + 'px';
-        labelEl.style.opacity = (isHover && label) ? '1' : '0';
+        labelEl.style.opacity = (isHover && labelTextRef.current) ? '1' : '0';
       }
 
       rafRef.current = requestAnimationFrame(animate);
@@ -125,10 +131,11 @@ export default function Cursor() {
       document.removeEventListener('mouseup', onUp);
       document.removeEventListener('mouseleave', onLeave);
       document.removeEventListener('mouseenter', onEnter);
+      document.removeEventListener('mouseover', onMouseOver);
+      document.removeEventListener('mouseout', onMouseOut);
       cancelAnimationFrame(rafRef.current);
-      observer.disconnect();
     };
-  }, [visible, label]);
+  }, []);
 
   const ticks = Array.from({ length: TICKS }, (_, i) => {
     const angle = (i / TICKS) * 360;
@@ -158,7 +165,7 @@ export default function Cursor() {
       <div ref={svgWrapRef} style={{
         position: 'fixed', pointerEvents: 'none', zIndex: 99998,
         transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.3s',
-        opacity: visible ? 1 : 0, willChange: 'transform, left, top',
+        opacity: 0, willChange: 'transform, left, top',
         left: '-200px', top: '-200px',
       }}>
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
@@ -205,7 +212,7 @@ export default function Cursor() {
         transition: 'opacity 0.2s ease',
         left: '-200px', top: '-200px',
       }}>
-        {label}
+        {/* Text set via DOM in animation loop */}
       </div>
     </>
   );
