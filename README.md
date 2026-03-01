@@ -1,133 +1,206 @@
-# VØID — Clothing Brand Website
+# VØID — Wear The Silence
 
-A story-driven, cinematic clothing brand website built with React + Vite + GSAP.
+A cinematic, story-driven luxury fashion brand website. Built for dark aesthetics, editorial pacing, and immersive scroll experiences.
+
+---
+
+## Overview
+
+VØID is a high-fidelity marketing website for a premium clothing label. Every section is driven by scroll-triggered animation, with a focus on typographic restraint, parallax depth, and a distinctly editorial tone.
+
+**Live sections:**
+
+- Cinematic hero with parallax background and animated headline
+- Infinite marquee ticker
+- Scrub-reveal manifesto statement
+- 5-product collection grid with stagger animation
+- Horizontally-scrolling brand story (4 chapters, pinned)
+- Craft / philosophy section with parallax image and animated stats
+- Newsletter / contact section
+- Full footer
+
+---
 
 ## Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| **React 18** | Component framework |
-| **GSAP 3 + ScrollTrigger** | All animations, scroll-pinning, parallax |
-| **Lenis** | Ultra-smooth scroll |
-| **SplitType** | Text splitting for character/word animations |
-| **Vite** | Build tool |
+| Package                  | Version | Role                                     |
+| ------------------------ | ------- | ---------------------------------------- |
+| **React**                | 18.3.1  | Component framework                      |
+| **Vite**                 | 5.4.1   | Build tool and dev server                |
+| **GSAP + ScrollTrigger** | 3.12.5  | All animations, scroll-pinning, parallax |
+| **@gsap/react**          | 2.1.1   | GSAP context and React integration       |
+| **Lenis**                | 1.1.14  | Smooth inertia scrolling                 |
+| **SplitType**            | 0.3.4   | Character and word-level text splitting  |
 
-## Setup
+### Typography (Google Fonts)
+
+| Font                   | Use                                     |
+| ---------------------- | --------------------------------------- |
+| **Cinzel**             | Display headings — architectural, roman |
+| **Cormorant Garamond** | Body and editorial italic               |
+| **Space Mono**         | Labels, counters, monospace UI          |
+
+### Color System
+
+```css
+--void-black: #080808 /* Page background              */ --cream: #f0ebe0
+  /* Primary text                 */ --gold: #c9a96e
+  /* Accent — borders, highlights */ --scarlet: #b5302a
+  /* Secondary accent             */;
+```
+
+---
+
+## Project Structure
+
+```
+void-brand-v2/
+├── index.html                  # Google Fonts, root mount
+├── vite.config.js
+├── public/
+└── src/
+    ├── main.jsx                # Vite entry
+    ├── App.jsx                 # Lenis init, section composition
+    ├── index.css               # All global styles (~1300 lines)
+    ├── assets/
+    ├── components/
+    │   ├── Cursor.jsx          # Custom cursor — diamond dot, gold ring, royal accents
+    │   ├── Loader.jsx          # Intro loader with progress bar
+    │   ├── Navbar.jsx          # Fixed nav — glassmorphism on scroll, hamburger menu
+    │   └── Footer.jsx
+    └── sections/
+        ├── Hero.jsx            # Parallax hero, SplitType char animation, CTA
+        ├── Marquee.jsx         # Infinite GSAP ticker
+        ├── Manifesto.jsx       # Scrubbed word-by-word reveal
+        ├── Collection.jsx      # 5-product grid with stagger
+        ├── Story.jsx           # Horizontal scroll — 4 brand story panels
+        ├── Philosophy.jsx      # Craft section — parallax image, animated stats
+        └── Newsletter.jsx      # Email capture section
+```
+
+---
+
+## Getting Started
+
+**Prerequisites:** Node.js 18+, npm 9+
 
 ```bash
-# 1. Copy these files into your Vite project (or use as-is)
+# Install dependencies
 npm install
 
-# 2. Start dev server
+# Start development server (http://localhost:5173)
 npm run dev
 
-# 3. Build for production
+# Production build
 npm run build
+
+# Preview production build locally
+npm run preview
 ```
 
-## Adding Your Images
-
-The site uses placeholder divs where images go. Replace them as follows:
-
-### Hero Image
-In `src/sections/Hero.jsx`, find:
-```jsx
-<div className="hero__image-placeholder">
-  {/* Replace with: <img src="/your-model-photo.jpg" alt="VØID Collection" /> */}
-```
-Replace the comment with your actual image tag. Use a portrait-orientation photo of your model/product.
-
-### Product Images
-In `src/sections/Collection.jsx`, each card has:
-```jsx
-{/* Drop in: <img src={`/products/product-${index+1}.jpg`} alt={product.name} /> */}
-```
-Place your product photos in `/public/products/` named `product-1.jpg` through `product-5.jpg`.
-
-### Philosophy Image
-In `src/sections/Philosophy.jsx`:
-```jsx
-{/* Replace with: <img src="/philosophy.jpg" alt="VØID Craft" /> */}
-```
-
-## Customization
-
-### Brand Name
-Find & replace `VØID` with your brand name throughout. The Ø is intentional — swap it out.
-
-### Colors
-Edit `src/index.css` `:root` variables:
-```css
-:root {
-  --void-black: #080808;    /* Background */
-  --cream: #f0ebe0;          /* Primary text */
-  --gold: #c9a96e;           /* Accent color — change this first */
-  --scarlet: #b5302a;        /* Secondary accent */
-}
-```
-
-### Products
-Edit the `products` array in `src/sections/Collection.jsx`.
-
-### Story Panels
-Edit the `panels` array in `src/sections/Story.jsx`.
-
-### Fonts
-Currently uses:
-- **Playfair Display** — Headlines (dramatic, luxury serif)
-- **Cormorant Garamond** — Body (elegant, editorial)
-- **Space Mono** — Labels/UI (technical contrast)
-
-Change in `index.html` (Google Fonts link) and `index.css` font variables.
+---
 
 ## Animation Architecture
 
 ```
 Page Load
-  └── Loader (2s progress bar)
-      └── Slide up exit → site fades in
+└── Loader fades in → progress bar fills over ~2s
+    └── Loader slides up → Hero and site fade in
+        └── ScrollTrigger.refresh() called after mount
 
-Hero Section
-  └── Eyebrow slides in → Title chars cascade → Sub fades → CTA rises
-  └── Visual panel clips in from right
-  └── Continuous parallax on scroll
+Hero
+├── Eyebrow line slides up
+├── Headline characters cascade in (SplitType)
+├── Sub-copy fades up, CTA buttons rise
+├── Image panel clips in from the right
+└── Parallax on scroll (GSAP ScrollTrigger)
 
 Marquee
-  └── GSAP infinite loop (pauses on hover)
+└── GSAP infinite horizontal loop — pauses on hover
 
 Manifesto
-  └── Words fade in as you scroll (scrubbed)
+└── Each word transitions from 0.08 → 1 opacity as you scrub
 
-Collection Grid
-  └── Cards stagger in as they enter viewport
+Collection
+└── Cards stagger into viewport with fade + translate
 
 Story (Horizontal Scroll)
-  └── GSAP ScrollTrigger pins section
-  └── 4 panels scroll horizontally
-  └── Title/body animate per panel
+├── GSAP ScrollTrigger pins the section
+├── 4 panels advance horizontally
+├── Background images animate with opposing xPercent parallax
+└── Title and body copy animate per panel
 
 Philosophy
-  └── Image parallax (moves at 0.15x scroll speed)
-  └── Stats count up on enter
+├── Image moves at ~0.3x scroll speed (parallax)
+└── Stats count up on viewport entry
 
-Newsletter
-  └── Title chars cascade in on scroll
+Navbar
+├── Transparent on top of page
+├── Glassmorphism (backdrop-filter blur) kicks in past 80px scroll
+└── Hamburger menu → fullscreen overlay with clip-path reveal (mobile)
+
+Cursor
+├── Diamond-shaped center dot — snappy follow
+├── Thin gold outer ring — graceful lag
+├── Rotating inner ring with cardinal diamond accents
+└── Cinzel label appears on interactive elements
 ```
+
+---
+
+## Customization
+
+### Brand Identity
+
+| Item         | File                       | What to change        |
+| ------------ | -------------------------- | --------------------- |
+| Brand name   | All files                  | Find & replace `VØID` |
+| Tagline      | `Navbar.jsx`, `Footer.jsx` | `"Wear The Silence"`  |
+| Accent color | `index.css` `:root`        | `--gold`              |
+| Background   | `index.css` `:root`        | `--void-black`        |
+
+### Content
+
+| Section    | File             | Editable data                                      |
+| ---------- | ---------------- | -------------------------------------------------- |
+| Hero       | `Hero.jsx`       | Headline, sub-copy, background image URL           |
+| Manifesto  | `Manifesto.jsx`  | Brand statement copy                               |
+| Collection | `Collection.jsx` | `products` array — name, price, tag, image URL     |
+| Story      | `Story.jsx`      | `panels` array — title, body, background image URL |
+| Philosophy | `Philosophy.jsx` | `stats` array, craft copy, image URL               |
+
+### Fonts
+
+1. Update the Google Fonts URL in `index.html`
+2. Update `--font-display`, `--font-body`, `--font-mono` in `index.css`
+
+---
 
 ## Deployment
 
-Works out of the box on Vercel, Netlify, or any static host.
+The output is a fully static site with no server requirements.
 
 ```bash
 npm run build
-# Deploy /dist folder
+# Outputs to /dist — deploy to any static host
 ```
 
-## Replacing "Mock" Brand with Yours
+Tested on: **Vercel**, **Netlify**, **Cloudflare Pages**
 
-1. **Name**: Replace all `VØID` instances
-2. **Tagline**: Change "Wear The Silence" in `Navbar.jsx` and `Footer.jsx`
-3. **Collections**: Update product names/prices in `Collection.jsx`
-4. **Manifesto**: Rewrite copy in `Manifesto.jsx`
-5. **Story panels**: Rewrite the 4 brand story chapters in `Story.jsx`
-6. **Philosophy**: Update stats and copy in `Philosophy.jsx`
+For Vercel and Netlify, set the build command to `npm run build` and the publish directory to `dist`. No additional configuration required.
+
+---
+
+## Browser Support
+
+| Feature           | Requirement                            |
+| ----------------- | -------------------------------------- |
+| `backdrop-filter` | Chrome 76+, Safari 9+, Firefox 103+    |
+| `clip-path`       | All modern browsers                    |
+| Custom cursor     | Desktop only (hidden on touch devices) |
+
+---
+
+## License
+
+Private client project. All rights reserved.
